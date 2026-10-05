@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>graph-viz-lite · 关系图</title>
+<style>
+  body { margin:0; background:#0b1220; color:#e2e8f0;
+         font-family: system-ui, "PingFang SC", sans-serif; padding:20px; }
+  h1 { font-size:18px; }
+  svg { background:#0f172a; border-radius:12px; }
+  .edge { stroke:#475569; stroke-width:1.5; }
+  .node { fill:#38bdf8; }
+  .label { fill:#e2e8f0; font-size:11px; text-anchor:middle; }
+</style>
+</head>
+<body>
+  <h1>团队协作关系图</h1>
+  <svg id="graph" width="720" height="480"></svg>
+
+<script id="graph-data" type="application/json">
+{
+  "nodes": [
+    {"id": "alice"}, {"id": "bob"}, {"id": "carol"},
+    {"id": "dave"}, {"id": "erin"}
+  ],
+  "edges": [
+    {"from": "alice", "to": "bob"},
+    {"from": "alice", "to": "carol"},
+    {"from": "bob", "to": "dave"},
+    {"from": "carol", "to": "dave"},
+    {"from": "dave", "to": "erin"}
+  ]
+}
+</script>
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('graph-data').textContent);
+  var svg = document.getElementById('graph');
+  var W = 720, H = 480, cx = W / 2, cy = H / 2, R = 180;
+
+  // 简单环形布局：节点均匀分布在圆周上
+  var positions = {};
+  data.nodes.forEach(function (n, i) {
+    var angle = (2 * Math.PI * i) / data.nodes.length - Math.PI / 2;
+    positions[n.id] = { x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle) };
+  });
+  window.__positions = positions;   // 暴露给测试用
+
+  var NS = 'http://www.w3.org/2000/svg';
+  data.edges.forEach(function (e) {
+    var a = positions[e.from], b = positions[e.to];
+    var line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+    line.setAttribute('class', 'edge');
+    svg.appendChild(line);
+  });
+  data.nodes.forEach(function (n) {
+    var p = positions[n.id];
+    var c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+    c.setAttribute('r', 18); c.setAttribute('class', 'node');
+    svg.appendChild(c);
+    var t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', p.x); t.setAttribute('y', p.y + 4);
+    t.setAttribute('class', 'label');
+    t.textContent = n.id;
+    svg.appendChild(t);
+  });
+})();
+</script>
+</body>
+</html>
